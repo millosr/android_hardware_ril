@@ -138,3 +138,4 @@
     {RIL_REQUEST_MODIFY_QOS,        dispatchStrings, responseStrings},
     {RIL_REQUEST_SUSPEND_QOS,       dispatchStrings, responseVoid},
     {RIL_REQUEST_RESUME_QOS,        dispatchStrings, responseVoid},
+

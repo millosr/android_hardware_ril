@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         int           fd = open("/proc/cmdline",O_RDONLY);
 
         if (fd < 0) {
-            LOGD("could not open /proc/cmdline:%s", strerror(errno));
+            ALOGD("could not open /proc/cmdline:%s", strerror(errno));
             goto OpenLib;
         }
 
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
         while (len == -1 && errno == EINTR);
 
         if (len < 0) {
-            LOGD("could not read /proc/cmdline:%s", strerror(errno));
+            ALOGD("could not read /proc/cmdline:%s", strerror(errno));
             close(fd);
             goto OpenLib;
         }
@@ -224,13 +224,13 @@ int main(int argc, char **argv)
                     done = 1;
                     break;
                 }
-                LOGD("could not connect to %s socket: %s",
+                ALOGD("could not connect to %s socket: %s",
                     QEMUD_SOCKET_NAME, strerror(errno));
                 if (--tries == 0)
                     break;
             }
             if (!done) {
-                LOGE("could not connect to %s socket (giving up): %s",
+                ALOGE("could not connect to %s socket (giving up): %s",
                     QEMUD_SOCKET_NAME, strerror(errno));
                 while(1)
                     sleep(0x00ffffff);

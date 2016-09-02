@@ -231,6 +231,7 @@ static void dispatchDataCall (Parcel& p, RequestInfo *pRI);
 static void dispatchVoiceRadioTech (Parcel& p, RequestInfo *pRI);
 static void dispatchCdmaSubscriptionSource (Parcel& p, RequestInfo *pRI);
 static void dispatchDepersonalization(Parcel &p, RequestInfo *pRI);
+
 static void dispatchCdmaSms(Parcel &p, RequestInfo *pRI);
 static void dispatchImsSms(Parcel &p, RequestInfo *pRI);
 static void dispatchImsCdmaSms(Parcel &p, RequestInfo *pRI, uint8_t retry, int32_t messageRef);
@@ -273,6 +274,8 @@ static int decodeVoiceRadioTechnology (RIL_RadioState radioState);
 static int decodeCdmaSubscriptionSource (RIL_RadioState radioState);
 static RIL_RadioState processRadioState(RIL_RadioState newRadioState, int client_id);
 static bool isServiceTypeCFQuery(RIL_SsServiceType serType, RIL_SsRequestType reqType);
+static RIL_RadioState processRadioState(RIL_RadioState newRadioState);
+
 extern "C" const char * requestToString(int request);
 extern "C" const char * failCauseToString(RIL_Errno);
 extern "C" const char * callStateToString(RIL_CallState);
@@ -520,6 +523,12 @@ int voiceRadioTech = -1;
    check to see if CDMA subscription source changed and notify telephony
  */
 int cdmaSubscriptionSource = -1;
+
+/* For older RILs that do not send RIL_UNSOL_RESPONSE_SIM_STATUS_CHANGED, decode the
+   SIM/RUIM state from radio state and store it. Every time there is a change in Radio State,
+   check to see if SIM/RUIM status changed and notify telephony
+ */
+int simRuimStatus = -1;
 
 static char *
 strdupReadString(Parcel &p) {
@@ -2622,18 +2631,8 @@ static int responseSimRefresh(Parcel &p, void *response, size_t responselen) {
     }
 
     startResponse;
-    if (s_callbacks[0].version < 6) {
-        int *p_cur = ((int *) response);
-        p.writeInt32(p_cur[0]);
-        p.writeInt32(p_cur[1]);
-        writeStringToParcel(p, "");
-
-        appendPrintBuf("%sresult=%d, ef_id=%d",
-                printBuf,
-                p_cur[0],
-                p_cur[1]);
-    } else if (responselen == sizeof (RIL_SimRefreshResponse_v6)) {
-        RIL_SimRefreshResponse_v6 *p_cur = ((RIL_SimRefreshResponse_v6 *) response);
+    if (s_callbacks[0].version == 7) {
+        RIL_SimRefreshResponse_v7 *p_cur = ((RIL_SimRefreshResponse_v7 *) response);
         p.writeInt32(p_cur->result);
         p.writeInt32(p_cur->ef_id);
         writeStringToParcel(p, p_cur->aid);
@@ -3715,6 +3714,25 @@ decodeCdmaSubscriptionSource (RIL_RadioState radioState) {
     }
 }
 
+static int
+decodeSimStatus (RIL_RadioState radioState) {
+   switch (radioState) {
+       case RADIO_STATE_SIM_NOT_READY:
+       case RADIO_STATE_RUIM_NOT_READY:
+       case RADIO_STATE_NV_NOT_READY:
+       case RADIO_STATE_NV_READY:
+           return -1;
+       case RADIO_STATE_SIM_LOCKED_OR_ABSENT:
+       case RADIO_STATE_SIM_READY:
+       case RADIO_STATE_RUIM_READY:
+       case RADIO_STATE_RUIM_LOCKED_OR_ABSENT:
+           return radioState;
+       default:
+           LOGD("decodeSimStatus: Invoked with incorrect RadioState");
+           return -1;
+   }
+}
+
 static bool is3gpp2(int radioTech) {
     switch (radioTech) {
         case RADIO_TECH_IS95A:
@@ -3740,6 +3758,7 @@ processRadioState(RIL_RadioState newRadioState, int client_id) {
     if((newRadioState > RADIO_STATE_UNAVAILABLE) && (newRadioState < RADIO_STATE_ON)) {
         int newVoiceRadioTech;
         int newCdmaSubscriptionSource;
+        int newSimStatus;
 
         /* This is old RIL. Decode Subscription source and Voice Radio Technology
            from Radio State and send change notifications if there has been a change */
