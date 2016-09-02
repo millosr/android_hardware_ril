@@ -1383,7 +1383,8 @@ dispatchCdmaSmsAck(Parcel &p, RequestInfo *pRI) {
     rcsa.uSMSCauseCode = (int) t;
 
     if (status != NO_ERROR) {
-        goto invalid;
+        invalidCommandBlock(pRI);
+        return;
     }
 
     startRequest;
@@ -1400,10 +1401,6 @@ dispatchCdmaSmsAck(Parcel &p, RequestInfo *pRI) {
 #endif
 
     return;
-
-invalid:
-    invalidCommandBlock(pRI);
-    return;
 }
 
 static void
@@ -1414,7 +1411,8 @@ dispatchGsmBrSmsCnf(Parcel &p, RequestInfo *pRI) {
 
     status = p.readInt32(&num);
     if (status != NO_ERROR) {
-        goto invalid;
+        invalidCommandBlock(pRI);
+        return;
     }
 
     RIL_GSM_BroadcastSmsConfigInfo gsmBci[num];
@@ -1448,7 +1446,8 @@ dispatchGsmBrSmsCnf(Parcel &p, RequestInfo *pRI) {
     closeRequest;
 
     if (status != NO_ERROR) {
-        goto invalid;
+        invalidCommandBlock(pRI);
+        return;
     }
 
     s_callbacks[pRI->client_id].onRequest(pRI->pCI->requestNumber,
@@ -1462,10 +1461,6 @@ dispatchGsmBrSmsCnf(Parcel &p, RequestInfo *pRI) {
 #endif
 
     return;
-
-invalid:
-    invalidCommandBlock(pRI);
-    return;
 }
 
 static void
@@ -1476,7 +1471,8 @@ dispatchCdmaBrSmsCnf(Parcel &p, RequestInfo *pRI) {
 
     status = p.readInt32(&num);
     if (status != NO_ERROR) {
-        goto invalid;
+        invalidCommandBlock(pRI);
+        return;
     }
 
     RIL_CDMA_BroadcastSmsConfigInfo cdmaBci[num];
@@ -1502,7 +1498,8 @@ dispatchCdmaBrSmsCnf(Parcel &p, RequestInfo *pRI) {
     closeRequest;
 
     if (status != NO_ERROR) {
-        goto invalid;
+        invalidCommandBlock(pRI);
+        return;
     }
 
     s_callbacks[pRI->client_id].onRequest(pRI->pCI->requestNumber,
@@ -1515,10 +1512,6 @@ dispatchCdmaBrSmsCnf(Parcel &p, RequestInfo *pRI) {
     memset(cdmaBciPtrs, 0, num * sizeof(RIL_CDMA_BroadcastSmsConfigInfo *));
 #endif
 
-    return;
-
-invalid:
-    invalidCommandBlock(pRI);
     return;
 }
 

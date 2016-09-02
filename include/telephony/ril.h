@@ -36,6 +36,12 @@ extern "C" {
 #define CDMA_ALPHA_INFO_BUFFER_LENGTH 64
 #define CDMA_NUMBER_INFO_BUFFER_LENGTH 81
 
+#define LOGE RLOGE
+#define LOGW RLOGW
+#define LOGI RLOGI
+#define LOGD RLOGD
+#define LOGV RLOGV
+
 typedef void * RIL_Token;
 
 typedef enum {
