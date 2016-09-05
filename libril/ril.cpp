@@ -608,6 +608,8 @@ processCommandBuffer(void *buffer, size_t buflen, int client_id) {
     status = p.readInt32(&request);
     status = p.readInt32 (&token);
 
+    LOGD("processCommandBuffer: request = %d, token = %d", request, token);
+
     if (status != NO_ERROR) {
         LOGE("invalid request block");
         return 0;
@@ -1957,6 +1959,7 @@ static int responseString(Parcel &p, void *response, size_t responselen) {
 static int responseVoid(Parcel &p, void *response, size_t responselen) {
     startResponse;
     removeLastChar;
+    closeResponse;
     return 0;
 }
 
@@ -3017,6 +3020,7 @@ static void processCommandsCallback(int fd, short flags, void *param) {
     for (;;) {
         /* loop until EAGAIN/EINTR, end of stream, or other error */
         ret = record_stream_get_next(p_rs[client_id], &p_record, &recordlen);
+        //LOGD("processCommandsCallback: ret = %d, recordlen = %d, errno = %d", ret, recordlen, errno);
 
         if (ret == 0 && p_record == NULL) {
             /* end-of-stream */
@@ -3100,6 +3104,7 @@ static void listenCallback (int fd, short flags, void *param) {
     socklen_t szCreds = sizeof(creds);
 
     struct passwd *pwd = NULL;
+    char subStr[5];
 
     LOGD("**RILD ListenCallback**");
     assert (fd == s_fdListen);
@@ -3174,6 +3179,10 @@ static void listenCallback (int fd, short flags, void *param) {
     }
 
     LOGI("libril: new connection");
+
+    //FIX for SUB1 string at the begging of stream
+    read (fd, subStr, 4);
+    LOGD("command stream start: %s", subStr);
 
     p_rs[client_id] = record_stream_new(s_fdCommand[client_id], MAX_COMMAND_BYTES);
 

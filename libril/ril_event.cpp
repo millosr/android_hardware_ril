@@ -74,7 +74,7 @@ static struct ril_event pending_list;
 
 #define LOGE RLOGE
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
 #define dlog(x...) RLOGD( x )
