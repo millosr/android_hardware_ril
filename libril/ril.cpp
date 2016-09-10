@@ -211,6 +211,9 @@ addRequestToList(int serial, int slotId, int request) {
     /* pendingRequestsHook refer to &s_pendingRequests */
     RequestInfo**    pendingRequestsHook = &s_pendingRequests;
 
+    RLOGD("addRequestToList, request = %s (%d), slodId = %d, serial(token) = %d",
+        requestToString(request), request, slotId, serial);
+
 #if (SIM_COUNT >= 2)
     if (socket_id == RIL_SOCKET_2) {
         pendingRequestsMutexHook = &s_pendingRequestsMutex_socket2;
