@@ -5402,6 +5402,9 @@ void RIL_onUnsolicitedResponse(int unsolResponse, const void *data,
             p.writeInt32(newState);
             appendPrintBuf("%s {%s}", printBuf,
                 radioStateToString(CALL_ONSTATEREQUEST(soc_id)));
+            if (newState == RADIO_STATE_UNAVAILABLE) {
+                abort(); // kill rild process
+            }
         break;
 
 
