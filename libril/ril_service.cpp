@@ -47,6 +47,11 @@ using android::RequestInfo;
 using android::requestToString;
 using android::sp;
 
+#define PRINTBUF_SIZE 8096
+#if RILC_LOG
+    static char printBuf[PRINTBUF_SIZE];
+#endif
+
 #define BOOL_TO_INT(x) (x ? 1 : 0)
 #define ATOI_NULL_HANDLED(x) (x ? atoi(x) : -1)
 #define ATOI_NULL_HANDLED_DEF(x, defaultVal) (x ? atoi(x) : defaultVal)
@@ -570,6 +575,8 @@ bool dispatchStrings(int serial, int slotId, int request, int countStrings, ...)
         sendErrorResponse(pRI, RIL_E_NO_MEMORY);
         return false;
     }
+
+    startRequest;
     va_list ap;
     va_start(ap, countStrings);
     for (int i = 0; i < countStrings; i++) {
@@ -580,10 +587,16 @@ bool dispatchStrings(int serial, int slotId, int request, int countStrings, ...)
                 memsetAndFreeStrings(1, pStrings[j]);
             }
             free(pStrings);
+            closeRequest;
             return false;
         }
+        appendPrintBuf("%s%s,", printBuf, pStrings[i]);
     }
     va_end(ap);
+
+    removeLastChar;
+    closeRequest;
+    printRequest(serial, request);
 
     CALL_ONREQUEST(request, pStrings, countStrings * sizeof(char *), pRI, slotId);
 
