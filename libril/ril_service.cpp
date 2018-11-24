@@ -1343,10 +1343,26 @@ Return<void> RadioImpl::setNetworkSelectionModeAutomatic(int32_t serial) {
 Return<void> RadioImpl::setNetworkSelectionModeManual(int32_t serial,
                                                       const hidl_string& operatorNumeric) {
 #if VDBG
-    RLOGD("setNetworkSelectionModeManual: serial %d", serial);
+    RLOGD("setNetworkSelectionModeManual: serial %d, operator num: %s",
+            serial, operatorNumeric.c_str());
 #endif
-    dispatchStrings(serial, mSlotId, RIL_REQUEST_SET_NETWORK_SELECTION_MANUAL, 2,
-            operatorNumeric.c_str(), (char *)(-1));
+    RequestInfo *pRI = android::addRequestToList(serial, mSlotId,
+            RIL_REQUEST_SET_NETWORK_SELECTION_MANUAL);
+    if (pRI == NULL) {
+        return Void();
+    }
+
+    size_t datalen = sizeof(char *) * 2;
+    char *pStrings[2];
+    if (!copyHidlStringToRil(&pStrings[0], operatorNumeric.c_str(), pRI)) {
+        return Void();
+    }
+    pStrings[1] = (char *)(-1);
+
+    CALL_ONREQUEST(RIL_REQUEST_SET_NETWORK_SELECTION_MANUAL, pStrings, datalen, pRI, mSlotId);
+
+    memsetAndFreeStrings(1, pStrings[0]);
+
     return Void();
 }
 
