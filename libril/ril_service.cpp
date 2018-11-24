@@ -4230,7 +4230,22 @@ int radio::getAvailableNetworksResponse(int slotId,
             char **resp = (char **) response;
             int numStrings = responseLen / sizeof(char *);
             networks.resize(numStrings/mqanelements);
-            for (int i = 0, j = 0; i < numStrings; i = i + mqanelements, j++) {
+            int j = 0;
+            for (int i = 0; i < numStrings; i = i + mqanelements) {
+                RLOGI("%d: %s, %s, %s, %s, %s", i, resp[i], resp[i + 1], resp[i + 2],
+                        resp[i + 3], (mqanelements > 4) ? resp[i + 4] : "");
+                bool opNumExists = false;
+                char *opNum = resp[i + 2];
+                for(int k = 0; k < j; k++) {
+                    if (strcmp(opNum, networks[k].operatorNumeric.c_str()) == 0) {
+                        opNumExists = true;
+                        RLOGI("skipping duplicate operator num: %s", opNum);
+                        break;
+                    }
+                }
+                if (opNumExists) {
+                    continue;
+                }
                 networks[j].alphaLong = convertCharPtrToHidlString(resp[i]);
                 networks[j].alphaShort = convertCharPtrToHidlString(resp[i + 1]);
                 networks[j].operatorNumeric = convertCharPtrToHidlString(resp[i + 2]);
@@ -4240,7 +4255,9 @@ int radio::getAvailableNetworksResponse(int slotId,
                 } else {
                     networks[j].status = (OperatorStatus) status;
                 }
+                j++;
             }
+            networks.resize(j);
         }
         Return<void> retStatus
                 = radioService[slotId]->mRadioResponse->getAvailableNetworksResponse(responseInfo,
