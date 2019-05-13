@@ -1354,7 +1354,7 @@ Return<void> RadioImpl::setNetworkSelectionModeManual(int32_t serial,
 
     size_t datalen = sizeof(char *) * 2;
     char *pStrings[2];
-    if (!copyHidlStringToRil(&pStrings[0], operatorNumeric.c_str(), pRI)) {
+    if (!copyHidlStringToRil(&pStrings[0], operatorNumeric, pRI)) {
         return Void();
     }
     pStrings[1] = (char *)(-1);
